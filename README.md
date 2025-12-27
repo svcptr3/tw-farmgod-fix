@@ -14,3 +14,8 @@ This repository contains a fixed version of the **FarmGod** Tribal Wars script.
 ## Notes
 - Original logic and behavior unchanged
 - Unofficial fork
+
+## Usage
+```js
+javascript:$.getScript('https://cdn.jsdelivr.net/gh/svcptr3/tw-farmgod-fix/farmgod.js');void(0);
+```
