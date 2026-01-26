@@ -1,5 +1,3 @@
-// Hungarian translation provided by =Krumpli=
-
 ScriptAPI.register('FarmGod', true, 'Warre', 'nl.tribalwars@coma.innogames.de');
 
 window.FarmGod = {};
@@ -169,9 +167,6 @@ window.FarmGod.Library = (function () {
       .closest('td')
       .find('select')
       .first();
-    // Commented out the old version of the code, updated in April 2024
-    // The old version did not count the number of pages in the loot assistant properly when there were more than 15 or so due to the way the UI changes to not show all pages
-    // let navLength = ($html.find('#am_widget_Farm').length > 0) ? $html.find('#plunder_list_nav').first().find('a.paged-nav-item').length : ((navSelect.length > 0) ? navSelect.find('option').length - 1 : $html.find('.paged-nav-item').not('[href*="page=-1"]').length);
     let navLength =
       $html.find('#am_widget_Farm').length > 0
         ? parseInt(
@@ -273,12 +268,6 @@ window.FarmGod.Library = (function () {
         '([\\d+|:]+)'
       )
     ).exec(timestr);
-    let laterDatePattern = new RegExp(
-      window.lang['0cb274c906d622fa8ce524bcfbb7552d']
-        .replace('%1', '([\\d+|\\.]+)')
-        .replace('%2', '([\\d+|:]+)')
-    ).exec(timestr);
-    let t, date;
 
     if (todayPattern !== null) {
       t = todayPattern[1].split(':');
@@ -295,9 +284,23 @@ window.FarmGod.Library = (function () {
         t[3] || 0
       );
     } else {
-      d = (laterDatePattern[1] + d[2]).split('.').map((x) => +x);
-      t = laterDatePattern[2].split(':');
-      date = new Date(d[2], d[1] - 1, d[0], t[0], t[1], t[2], t[3] || 0);
+      // fix wrong later date pattern - lang value regex
+      const dateMatch = timestr.match(/(\d{1,2})\.(\d{1,2})\./);
+      const timeMatch = timestr.match(/(\d{2}):(\d{2}):(\d{2})(?::(\d{1,3}))?/);
+    
+      if (!dateMatch || !timeMatch) {
+        throw new Error('Failed to retrieve date' + timestr);
+      }
+    
+      const day = parseInt(dateMatch[1], 10);
+      const month = parseInt(dateMatch[2], 10) - 1;
+    
+      const hour = parseInt(timeMatch[1], 10);
+      const min = parseInt(timeMatch[2], 10);
+      const sec = parseInt(timeMatch[3], 10);
+      const ms = parseInt(timeMatch[4] || 0, 10);
+    
+      date = new Date(d[2], month, day, hour, min, sec, ms);
     }
 
     return date.getTime();
@@ -460,11 +463,6 @@ window.FarmGod.Main = (function (Library, Translation) {
     } else {
       UI.ErrorMessage(t.missingFeatures);
     }
-
-    /*
-    if (game_data.market != 'nl') {
-      $.post('https://swtools.be/ScriptStats/insert.php', { script: 'FarmGod', market: game_data.market, world: game_data.world, player: game_data.player.id });
-    }*/
   };
 
   const bindEventHandlers = function () {
@@ -523,7 +521,7 @@ window.FarmGod.Main = (function (Library, Translation) {
       $templateRows.last().find('td').last().text().toNumber();
 
     return $.when(buildGroupSelect(options.optionGroup)).then(
-      (groupSelect) => {s
+      (groupSelect) => {
         return `<style>#popup_box_FarmGod{text-align:center;width:550px;}</style>
                 <h3>${t.options.title}</h3><br><div class="optionsContent">
                 ${checkboxError || templateError
@@ -767,7 +765,7 @@ window.FarmGod.Main = (function (Library, Translation) {
 			const match = cls.match(/farm_icon_([a-z])/i);
 			if (!match) return;
 
-			const templateKey = match[1].toLowerCase(); // a vagy b
+			const templateKey = match[1].toLowerCase();
 
 			data.farms.templates[templateKey] = {
 			  id: $el
@@ -1027,9 +1025,7 @@ window.FarmGod.Main = (function (Library, Translation) {
     }
   };
 
-  return {
-    init,
-  };
+  return {init};
 })(window.FarmGod.Library, window.FarmGod.Translation);
 
 (() => {
